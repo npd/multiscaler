@@ -44,3 +44,4 @@ set_property(SOURCE iio.c PROPERTY COMPILE_FLAGS "-Wno-unused-variable -Wno-unus
 
 add_executable(decompose decompose.c iio.c)
 add_executable(recompose recompose.c iio.c)
+add_executable(merge_coarse merge_coarse.c iio.c)
