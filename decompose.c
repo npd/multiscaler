@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
 
   // Normalization
   for (int i = 0; i < width * height * channels; ++i) {
-    freq[i] /= sqrtf(4 * width * height);
+    freq[i] /= 4 * width * height;
   }
 
   float *output = (float *) fftwf_malloc(sizeof(float) * width * height * channels);
@@ -44,11 +44,6 @@ int main(int argc, char *argv[]) {
     plan = fftwf_plan_many_r2r(2, n, channels, freq, shape, channels, 1, output, NULL, channels, 1, idct2, FFTW_ESTIMATE);
     fftwf_execute(plan);
     fftwf_destroy_plan(plan);
-
-    // Normalization
-    for (int j = 0; j < w * h * channels; ++j) {
-      output[j] /= sqrtf(4 * w * h);
-    }
 
     char *filename;
     asprintf(&filename, "%s%d%s", output_prefix, i, output_suffix);

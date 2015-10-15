@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
 
     // Normalization
     for (int j = 0; j < w * h * channels; ++j) {
-      image[j] /= sqrtf(4 * w * h);
+      image[j] /= 4 * w * h;
     }
     // DCT on the upper-left w x h rectangle
     int n[] = {h, w};
@@ -42,11 +42,6 @@ int main(int argc, char *argv[]) {
     fftwf_execute(plan);
     fftwf_destroy_plan(plan);
     free(image);
-  }
-
-  // Normalization
-  for (int i = 0; i < width * height * channels; ++i) {
-    freq[i] /= sqrtf(4 * width * height);
   }
 
   // IDCT of the output image
