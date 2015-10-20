@@ -20,17 +20,17 @@ int main(int argc, char *argv[]) {
   int width, height, c;
   char *filename;
   asprintf(&filename, "%s%d%s", input_prefix, 0, input_suffix);
-  float *image = iio_read_image_float_vec(filename, &width, &height, &c);
-  free(image);
+  float *output = iio_read_image_float_vec(filename, &width, &height, &c);
   free(filename);
 
-  float *output = (float *) fftwf_malloc(sizeof(float) * width * height * c);
+  // Perform the DCT
+  dct_inplace(output, width, height, c);
 
-  for (int i = 0; i < levels; ++i) {
+  for (int i = 1; i < levels; ++i) {
     // Read level i of the pyramid
     int w, h;
     asprintf(&filename, "%s%d%s", input_prefix, i, input_suffix);
-    image = iio_read_image_float_vec(filename, &w, &h, &c);
+    float *image = iio_read_image_float_vec(filename, &w, &h, &c);
     free(filename);
 
     // Perform the DCT
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
         float factor = 0.f;
         if (gaussian && i) {
           const float pi2sigma2 = (float) (M_PI * M_PI) * STDDEV * STDDEV;
-          factor = 1 - expf(-pi2sigma2 * (j * j / (2.f * h * h) + k * k / (2.f * w * w)));
+          factor = 1.f - expf(-pi2sigma2 * (j * j / (2.f * h * h) + k * k / (2.f * w * w)));
         }
         for (int l = 0; l < c; ++l) {
           output[width * c * j + c * k + l] *= factor;

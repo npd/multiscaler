@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <fftw3.h>
 #include <assert.h>
 #include <math.h>
 #include "iio.h"
@@ -37,7 +36,7 @@ int main(int argc, char *argv[]) {
       float factor = 0.f;
       if (gaussian) {
         const float pi2sigma2 = (float) (M_PI * M_PI) * STDDEV * STDDEV;
-        factor = 1 - expf(-pi2sigma2 * (j * j / (2.f * ch * ch) + k * k / (2.f * cw * cw)));
+        factor = 1.f - expf(-pi2sigma2 * (j * j / (2.f * ch * ch) + k * k / (2.f * cw * cw)));
       }
       for (int l = 0; l < fc; ++l) {
         fine[fw * fc * j + fc * k + l] *= factor;
