@@ -1,11 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fftw3.h>
+#include <math.h>
 #include "iio.h"
+#include "multiscaler.h"
 
 int main(int argc, char *argv[]) {
+  int gaussian = pick_option(&argc, argv, "g", NULL) != NULL;
   if (argc != 5) {
-    fprintf(stderr, "Usage: %s input prefix levels suffix\n", argv[0]);
+    fprintf(stderr, "Usage: %s input prefix levels suffix [-g]\n", argv[0]);
     exit(EXIT_FAILURE);
   }
   char *input = argv[1];
@@ -14,44 +17,41 @@ int main(int argc, char *argv[]) {
   char *output_suffix = argv[4];
 
   // Read the input image
-  int width, height, channels;
-  float *image = iio_read_image_float_vec(input, &width, &height, &channels);
+  int width, height, c;
+  float *image = iio_read_image_float_vec(input, &width, &height, &c);
 
   // DCT of the input image
-  float *freq = (float *) fftwf_malloc(sizeof(float) * width * height * channels);
-  int shape[] = {height, width};
-  fftwf_r2r_kind dct2[] = {FFTW_REDFT10, FFTW_REDFT10};
-  fftwf_plan plan = fftwf_plan_many_r2r(2, shape, channels, image, shape, channels, 1, freq, NULL, channels, 1, dct2, FFTW_ESTIMATE);
-  fftwf_execute(plan);
-  fftwf_destroy_plan(plan);
+  dct_inplace(image, width, height, c);
 
-  // We don't need the input image anymore
-  free(image);
-
-  // Normalization
-  for (int i = 0; i < width * height * channels; ++i) {
-    freq[i] /= 4 * width * height;
-  }
-
-  float *output = (float *) fftwf_malloc(sizeof(float) * width * height * channels);
+  float *output = (float *) fftwf_malloc(sizeof(float) * width * height * c);
   for (int i = 0; i < levels; ++i) {
     int w = width >> i;
     int h = height >> i;
 
-    // Inverse DCT on the upper-left w x h rectangle
-    int n[] = {h, w};
-    fftwf_r2r_kind idct2[] = {FFTW_REDFT01, FFTW_REDFT01};
-    plan = fftwf_plan_many_r2r(2, n, channels, freq, shape, channels, 1, output, NULL, channels, 1, idct2, FFTW_ESTIMATE);
-    fftwf_execute(plan);
-    fftwf_destroy_plan(plan);
+    // Copy data
+    for (int j = 0; j < h; ++j) {
+      for (int k = 0; k < w; ++k) {
+        for (int l = 0; l < c; ++l) {
+          output[w * c * j + c * k + l] = image[width * c * j + c * k + l];
+          // Gaussian blur if not in level zero
+          if (gaussian && i) {
+            const float pi2sigma2 = (float) (M_PI * M_PI) * STDDEV * STDDEV;
+            output[w * c * j + c * k + l] *= expf( -pi2sigma2 * (j * j / (2.f * h * h) + k * k / (2.f * w * w)));
+          }
+        }
+      }
+    }
+
+    // Inverse DCT
+    idct_inplace(output, w, h, c);
 
     char *filename;
     asprintf(&filename, "%s%d%s", output_prefix, i, output_suffix);
-    iio_save_image_float_vec(filename, output, w, h, channels);
+    iio_save_image_float_vec(filename, output, w, h, c);
     free(filename);
   }
 
-  fftwf_free(freq);
+  free(image);
   fftwf_free(output);
   return 0;
 }

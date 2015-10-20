@@ -31,3 +31,9 @@ To decompose an image `input.png` into 3 levels, respectively `pyramid0.tiff`, `
 To recompose it (possibly after working on the single layers) on `output.tiff` use
 
     $ recompose pyramid 3 .tiff output.tiff
+
+To join two layers `fine.tiff` and `coarse.tiff` together, use
+
+    $ merge_coarse fine.tiff coarse.tiff output.tiff
+
+Use the flag -g (in both decomposing and recomposing) to use a Gaussian pyramid.

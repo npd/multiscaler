@@ -1,62 +1,56 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fftw3.h>
+#include <assert.h>
+#include <math.h>
 #include "iio.h"
+#include "multiscaler.h"
 
 int main(int argc, char *argv[]) {
+  int gaussian = pick_option(&argc, argv, "g", NULL) != NULL;
   if (argc != 4) {
-    fprintf(stderr, "Usage: %s image coarse result\n", argv[0]);
+    fprintf(stderr, "Usage: %s image coarse result [-g]\n", argv[0]);
     exit(EXIT_FAILURE);
   }
   char *input_name = argv[1];
   char *coarse_name = argv[2];
   char *output_name = argv[3];
 
-  // Read the input image
-  int width, height, channels;
-  float *image = iio_read_image_float_vec(input_name, &width, &height, &channels);
+  // Read the fine image
+  int fw, fh, fc;
+  float *fine = iio_read_image_float_vec(input_name, &fw, &fh, &fc);
 
-  // Normalization
-  for (int j = 0; j < width * height * channels; ++j) {
-    image[j] /= 4 * width * height;
-  }
-
-  // DCT of the input image
-  float *freq = (float *) fftwf_malloc(sizeof(float) * width * height * channels);
-  int shape[] = {height, width};
-  fftwf_r2r_kind dct2[] = {FFTW_REDFT10, FFTW_REDFT10};
-  fftwf_plan plan = fftwf_plan_many_r2r(2, shape, channels, image, shape, channels, 1, freq, NULL, channels, 1, dct2, FFTW_ESTIMATE);
-  fftwf_execute(plan);
-  fftwf_destroy_plan(plan);
-
-  // We don't need the input image anymore
-  free(image);
+  // DCT of the fine image
+  dct_inplace(fine, fw, fh, fc);
 
   // Read the low frequencies
-  int coarse_width, coarse_height, coarse_channels;
-  image = iio_read_image_float_vec(coarse_name, &coarse_width, &coarse_height, &coarse_channels);
+  int cw, ch, cc;
+  float *coarse = iio_read_image_float_vec(coarse_name, &cw, &ch, &cc);
+  assert(fc == cc);
 
-  // Normalization
-  for (int j = 0; j < coarse_width * coarse_height * channels; ++j) {
-    image[j] /= 4 * coarse_width * coarse_height;
+  // DCT of the low frequencies
+  dct_inplace(coarse, cw, ch, cc);
+
+  // Copy data
+  for (int j = 0; j < ch; ++j) {
+    for (int k = 0; k < cw; ++k) {
+      float factor = 0.f;
+      if (gaussian) {
+        const float pi2sigma2 = (float) (M_PI * M_PI) * STDDEV * STDDEV;
+        factor = 1 - expf(-pi2sigma2 * (j * j / (2.f * ch * ch) + k * k / (2.f * cw * cw)));
+      }
+      for (int l = 0; l < fc; ++l) {
+        fine[fw * fc * j + fc * k + l] *= factor;
+        fine[fw * fc * j + fc * k + l] += coarse[cw * fc * j + fc * k + l];
+      }
+    }
   }
-
-  // DCT on the upper-left w x h rectangle
-  int n[] = {coarse_height, coarse_width};
-  plan = fftwf_plan_many_r2r(2, n, channels, image, NULL, channels, 1, freq, shape, channels, 1, dct2, FFTW_ESTIMATE);
-  fftwf_execute(plan);
-  fftwf_destroy_plan(plan);
-  free(image);
+  free(coarse);
 
   // IDCT of the output image
-  float *output = (float *) fftwf_malloc(sizeof(float) * width * height * channels);
-  fftwf_r2r_kind idct2[] = {FFTW_REDFT01, FFTW_REDFT01};
-  plan = fftwf_plan_many_r2r(2, shape, channels, freq, shape, channels, 1, output, NULL, channels, 1, idct2, FFTW_ESTIMATE);
-  fftwf_execute(plan);
-  fftwf_destroy_plan(plan);
+  idct_inplace(fine, fw, fh, fc);
 
-  iio_save_image_float_vec(output_name, output, width, height, channels);
-  fftwf_free(freq);
-  fftwf_free(output);
+  iio_save_image_float_vec(output_name, fine, fw, fh, fc);
+  free(fine);
   return 0;
 }
