@@ -6,9 +6,9 @@
 #include "multiscaler.h"
 
 int main(int argc, char *argv[]) {
-  int gaussian = pick_option(&argc, argv, "g", NULL) != NULL;
+  float sigma = atof(pick_option(&argc, argv, "g", "-1"));
   if (argc != 5) {
-    fprintf(stderr, "Usage: %s prefix levels suffix output [-g]\n", argv[0]);
+    fprintf(stderr, "Usage: %s prefix levels suffix output [-g sigma]\n", argv[0]);
     exit(EXIT_FAILURE);
   }
   char *input_prefix = argv[1];
@@ -40,8 +40,8 @@ int main(int argc, char *argv[]) {
     for (int j = 0; j < h; ++j) {
       for (int k = 0; k < w; ++k) {
         float factor = 0.f;
-        if (gaussian && i) {
-          const float pi2sigma2 = (float) (M_PI * M_PI) * STDDEV * STDDEV;
+        if ((sigma > 0.f) && i) {
+          const float pi2sigma2 = (float) (M_PI * M_PI) * sigma * sigma;
           factor = 1.f - expf(-pi2sigma2 * (j * j / (2.f * h * h) + k * k / (2.f * w * w)));
         }
         for (int l = 0; l < c; ++l) {

@@ -6,7 +6,7 @@
 #include "multiscaler.h"
 
 int main(int argc, char *argv[]) {
-  int gaussian = pick_option(&argc, argv, "g", NULL) != NULL;
+  float sigma = atof(pick_option(&argc, argv, "g", "-1"));
   if (argc != 4) {
     fprintf(stderr, "Usage: %s image coarse result [-g]\n", argv[0]);
     exit(EXIT_FAILURE);
@@ -34,8 +34,8 @@ int main(int argc, char *argv[]) {
   for (int j = 0; j < ch; ++j) {
     for (int k = 0; k < cw; ++k) {
       float factor = 0.f;
-      if (gaussian) {
-        const float pi2sigma2 = (float) (M_PI * M_PI) * STDDEV * STDDEV;
+      if (sigma > 0.f) {
+        const float pi2sigma2 = (float) (M_PI * M_PI) * sigma * sigma;
         factor = 1.f - expf(-pi2sigma2 * (j * j / (2.f * ch * ch) + k * k / (2.f * cw * cw)));
       }
       for (int l = 0; l < fc; ++l) {
