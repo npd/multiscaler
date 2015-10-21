@@ -53,5 +53,5 @@ int main(int argc, char *argv[]) {
 
   free(image);
   fftwf_free(output);
-  return 0;
+  return EXIT_SUCCESS;
 }

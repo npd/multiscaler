@@ -51,5 +51,5 @@ int main(int argc, char *argv[]) {
 
   iio_save_image_float_vec(output_name, fine, fw, fh, fc);
   free(fine);
-  return 0;
+  return EXIT_SUCCESS;
 }

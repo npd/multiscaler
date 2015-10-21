@@ -45,3 +45,4 @@ set_property(SOURCE iio.c PROPERTY COMPILE_FLAGS "-Wno-unused-variable -Wno-unus
 add_executable(decompose decompose.c iio.c iio.h multiscaler.c multiscaler.h)
 add_executable(recompose recompose.c iio.c iio.h multiscaler.c multiscaler.h)
 add_executable(merge_coarse merge_coarse.c iio.c iio.h multiscaler.c multiscaler.h)
+add_executable(gen_cov_mat gen_cov_mat.c iio.c iio.h multiscaler.c multiscaler.h)
