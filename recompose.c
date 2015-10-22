@@ -6,7 +6,7 @@
 #include "multiscaler.h"
 
 int main(int argc, char *argv[]) {
-  float sigma = atof(pick_option(&argc, argv, "g", "-1"));
+  float sigma = (float) atof(pick_option(&argc, argv, "g", "-1"));
   if (argc != 5) {
     fprintf(stderr, "Usage: %s prefix levels suffix output [-g sigma]\n", argv[0]);
     exit(EXIT_FAILURE);

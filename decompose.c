@@ -6,9 +6,10 @@
 #include "multiscaler.h"
 
 int main(int argc, char *argv[]) {
-  float sigma = atof(pick_option(&argc, argv, "g", "-1"));
+  float sigma = (float) atof(pick_option(&argc, argv, "g", "-1"));
+  float ratio = (float) atof(pick_option(&argc, argv, "r", "2."));
   if (argc != 5) {
-    fprintf(stderr, "Usage: %s input prefix levels suffix [-g sigma]\n", argv[0]);
+    fprintf(stderr, "Usage: %s input prefix levels suffix [-r ratio] [-g sigma]\n", argv[0]);
     exit(EXIT_FAILURE);
   }
   char *input = argv[1];
@@ -22,12 +23,10 @@ int main(int argc, char *argv[]) {
 
   // DCT of the input image
   dct_inplace(image, width, height, c);
-
+  int w = width;
+  int h = height;
   float *output = (float *) fftwf_malloc(sizeof(float) * width * height * c);
   for (int i = 0; i < levels; ++i) {
-    int w = width >> i;
-    int h = height >> i;
-
     // Copy data
     for (int j = 0; j < h; ++j) {
       for (int k = 0; k < w; ++k) {
@@ -49,6 +48,9 @@ int main(int argc, char *argv[]) {
     asprintf(&filename, "%s%d%s", output_prefix, i, output_suffix);
     iio_save_image_float_vec(filename, output, w, h, c);
     free(filename);
+
+    w = (int) (w / ratio);
+    h = (int) (h / ratio);
   }
 
   free(image);
