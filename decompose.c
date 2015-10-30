@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
           // Gaussian blur if not in level zero
           if ((sigma > 0.f) && i) {
             const float pi2sigma2 = (float) (M_PI * M_PI) * sigma * sigma;
-            output[w * c * j + c * k + l] *= expf( -pi2sigma2 * (j * j / (2.f * h * h) + k * k / (2.f * w * w)));
+            output[w * c * j + c * k + l] *= expf(-pi2sigma2 * (j * j / (2.f * h * h) + k * k / (2.f * w * w)));
           }
         }
       }

@@ -6,6 +6,7 @@
 #include <fftw3.h>
 #include "multiscaler.h"
 
+
 void dct_inplace(float *data, int w, int h, int c) {
   int n[] = {h, w};
   fftwf_r2r_kind dct2[] = {FFTW_REDFT10, FFTW_REDFT10};
@@ -25,6 +26,15 @@ void idct_inplace(float *data, int w, int h, int c) {
   fftwf_r2r_kind idct2[] = {FFTW_REDFT01, FFTW_REDFT01};
   fftwf_plan plan = fftwf_plan_many_r2r(2, n, c, data, NULL, c, 1, data, NULL,
                                         c, 1, idct2, FFTW_ESTIMATE);
+  fftwf_execute(plan);
+  fftwf_destroy_plan(plan);
+}
+
+void dct1_inplace(float *data, int w, int h, int c) {
+  int n[] = {h, w};
+  fftwf_r2r_kind dct2[] = {FFTW_REDFT00, FFTW_REDFT00};
+  fftwf_plan plan = fftwf_plan_many_r2r(2, n, c, data, NULL, c, 1, data, NULL,
+                                        c, 1, dct2, FFTW_ESTIMATE);
   fftwf_execute(plan);
   fftwf_destroy_plan(plan);
 }
