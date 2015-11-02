@@ -6,10 +6,13 @@
 #include "multiscaler.h"
 
 int main(int argc, char *argv[]) {
-  float sigma = (float) atof(pick_option(&argc, argv, "g", "-1"));
+  float gauss_s = (float) atof(pick_option(&argc, argv, "g", "-1"));
+  bool gauss = gauss_s > 0.f;
+  float tukey_a = (float) atof(pick_option(&argc, argv, "t", "-1"));
+  bool tukey = tukey_a > 0.f;
   float ratio = (float) atof(pick_option(&argc, argv, "r", "2."));
-  if (argc != 5) {
-    fprintf(stderr, "Usage: %s input prefix levels suffix [-r ratio] [-g sigma]\n", argv[0]);
+  if ((argc != 5) || (gauss && tukey)) {
+    fprintf(stderr, "Usage: %s input prefix levels suffix [-r ratio] [-g sigma | -t alpha]\n", argv[0]);
     exit(EXIT_FAILURE);
   }
   char *input = argv[1];
@@ -32,10 +35,13 @@ int main(int argc, char *argv[]) {
       for (int k = 0; k < w; ++k) {
         for (int l = 0; l < c; ++l) {
           output[w * c * j + c * k + l] = image[width * c * j + c * k + l];
-          // Gaussian blur if not in level zero
-          if ((sigma > 0.f) && i) {
-            const float pi2sigma2 = (float) (M_PI * M_PI) * sigma * sigma;
+          // Blur if not in level zero
+          if (gauss && i) {
+            const float pi2sigma2 = (float) (M_PI * M_PI) * gauss_s * gauss_s;
             output[w * c * j + c * k + l] *= expf(-pi2sigma2 * (j * j / (2.f * h * h) + k * k / (2.f * w * w)));
+          } else if (tukey && i) {
+            if (j > h * tukey_a) output[w * c * j + c * k + l] *= .5f * (1 + cosf(M_2_PI * (j / h - .5f)));
+            if (k > w * tukey_a) output[w * c * j + c * k + l] *= .5f * (1 + cosf(M_2_PI * (k / w - .5f)));
           }
         }
       }

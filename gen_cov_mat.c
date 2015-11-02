@@ -12,27 +12,38 @@
 SMART_PARAMETER_INT(FILTER_SUPPORT, 100);
 
 int main(int argc, char *argv[]) {
-  float sigma = atof(pick_option(&argc, argv, "g", "-1"));
+  float gauss_s = (float) atof(pick_option(&argc, argv, "g", "-1"));
+  bool gauss = gauss_s > 0.f;
+  float tukey_a = (float) atof(pick_option(&argc, argv, "t", "-1"));
+  bool tukey = tukey_a > 0.f;
   int n = atoi(pick_option(&argc, argv, "n", "5"));
   int usage = pick_option(&argc, argv, "h", NULL) != NULL;
-  if (usage) {
-    fprintf(stderr, "Usage: %s [output] [-g sigma] [-n size]\n", argv[0]);
+  if (usage || (gauss & tukey)) {
+    fprintf(stderr, "Usage: %s [output] [-h] [-g sigma | -t alpha] [-n size]\n", argv[0]);
     exit(EXIT_SUCCESS);
   }
   char *output = argc > 1 ? argv[1] : "-";
 
   float *filter;
   int N = FILTER_SUPPORT();
-  if (sigma > 0.f) {
-    filter = fftwf_malloc(N * N * sizeof(float));
-    const float pi2sigma2 = (float) (M_PI * M_PI) * sigma * sigma;
-    for (int i = 0; i < N; ++i) {
-      for (int j = 0; j < N; ++j) {
-        filter[N * i + j] = expf(-pi2sigma2 * (i * i + j * j) / ((N - 1) * (N - 1))) / ((2 * N - 2) * (2 * N - 2));
+  int w = N - 1, h = N - 1;
+  filter = fftwf_malloc(N * N * sizeof(float));
+
+  for (int j = 0; j < N; ++j) {
+    for (int k = 0; k < N; ++k) {
+      float factor = 1.f;
+      if (gauss) {
+        const float pi2sigma2 = (float) (M_PI * M_PI) * gauss_s * gauss_s;
+        factor = expf(-pi2sigma2 * (j * j / (2.f * w * w) + k * k / (2.f * h * h)));
+      } else if (tukey) {
+        if (j > h * tukey_a) factor *= .5f * (1 + cosf(M_2_PI * (j / h - .5f)));
+        if (k > w * tukey_a) factor *= .5f * (1 + cosf(M_2_PI * (k / w - .5f)));
       }
+      filter[N * j + k] = factor * factor / (4 * w * h);
     }
-    dct1_inplace(filter, N, N, 1);
   }
+
+  dct1_inplace(filter, N, N, 1);
 
   float *cov_mat = malloc(n * n * n * n * sizeof(float));
   int ind = 0;
@@ -45,7 +56,7 @@ int main(int argc, char *argv[]) {
           int dj = j1 - j2;
           di = (di < 0) ? -di : di;
           dj = (dj < 0) ? -dj : dj;
-          if (sigma > 0.f) {
+          if (gauss) {
             cov_mat[ind] = filter[N * di + dj];
           } else {
             cov_mat[ind] = (di + dj) ? 0 : 1;
@@ -56,7 +67,9 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  fftwf_free(filter);
   iio_save_image_float_vec(output, cov_mat, n * n, n * n, 1);
+  free(cov_mat);
 
   return EXIT_SUCCESS;
 }

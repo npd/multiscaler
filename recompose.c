@@ -6,9 +6,13 @@
 #include "multiscaler.h"
 
 int main(int argc, char *argv[]) {
-  float sigma = (float) atof(pick_option(&argc, argv, "g", "-1"));
-  if (argc != 5) {
-    fprintf(stderr, "Usage: %s prefix levels suffix output [-g sigma]\n", argv[0]);
+  float gauss_s = (float) atof(pick_option(&argc, argv, "g", "-1"));
+  bool gauss = gauss_s > 0.f;
+  float tukey_a = (float) atof(pick_option(&argc, argv, "t", "-1"));
+  bool tukey = tukey_a > 0.f;
+
+  if ((argc != 5) || (gauss && tukey)) {
+    fprintf(stderr, "Usage: %s prefix levels suffix output [-g sigma | -t alpha]\n", argv[0]);
     exit(EXIT_FAILURE);
   }
   char *input_prefix = argv[1];
@@ -39,13 +43,16 @@ int main(int argc, char *argv[]) {
     // Copy data
     for (int j = 0; j < h; ++j) {
       for (int k = 0; k < w; ++k) {
-        float factor = 0.f;
-        if ((sigma > 0.f) && i) {
-          const float pi2sigma2 = (float) (M_PI * M_PI) * sigma * sigma;
-          factor = 1.f - expf(-pi2sigma2 * (j * j / (2.f * h * h) + k * k / (2.f * w * w)));
+        float factor = 1.f;
+        if (gauss && i) {
+          const float pi2sigma2 = (float) (M_PI * M_PI) * gauss_s * gauss_s;
+          factor = expf(-pi2sigma2 * (j * j / (2.f * h * h) + k * k / (2.f * w * w)));
+        } else if (tukey && i) {
+          if (j > h * tukey_a) factor *= .5f * (1 + cosf(M_2_PI * (j / h - .5f)));
+          if (k > w * tukey_a) factor *= .5f * (1 + cosf(M_2_PI * (k / w - .5f)));
         }
         for (int l = 0; l < c; ++l) {
-          output[width * c * j + c * k + l] *= factor;
+          output[width * c * j + c * k + l] *= 1.f - factor;
           output[width * c * j + c * k + l] += image[w * c * j + c * k + l];
         }
       }
