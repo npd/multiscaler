@@ -13,7 +13,7 @@ To compile, use
 
     $ mkdir build
     $ cd build
-    $ cmake .. [-D CMAKE_CXX_COMPILER=/path/of/c++/compiler -D CMAKE_C_COMPILER=/path/of/c/compiler] [-D CMAKE_BUILD_TYPE=Debug]
+    $ cmake .. [-DCMAKE_CXX_COMPILER=/path/of/c++/compiler -DCMAKE_C_COMPILER=/path/of/c/compiler] [-DCMAKE_BUILD_TYPE=Debug]
     $ make
 
 To rebuild, e.g. when the code is modified, use
@@ -37,3 +37,4 @@ To join two layers `fine.tiff` and `coarse.tiff` together, use
     $ merge_coarse fine.tiff coarse.tiff output.tiff
 
 Use the flag `-g sigma` (in both decomposing and recomposing) to use a Gaussian pyramid with standard deviation `sigma`.
+Use the flag `-t alpha` to use a Tukey window, and `-c` to enforce conservative recomposing.

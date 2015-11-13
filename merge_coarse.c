@@ -10,8 +10,10 @@ int main(int argc, char *argv[]) {
   bool gauss = gauss_s > 0.f;
   float tukey_a = (float) atof(pick_option(&argc, argv, "t", "-1"));
   bool tukey = tukey_a > 0.f;
+  bool conservative = pick_option(&argc, argv, "c", NULL) != NULL;
+
   if ((argc != 4) || (gauss && tukey)) {
-    fprintf(stderr, "Usage: %s image coarse result [-g sigma | -t alpha]\n", argv[0]);
+    fprintf(stderr, "Usage: %s image coarse result [-g sigma | -t alpha [-c]]\n", argv[0]);
     exit(EXIT_FAILURE);
   }
   char *input_name = argv[1];
@@ -41,8 +43,12 @@ int main(int argc, char *argv[]) {
         const float pi2sigma2 = (float) (M_PI * M_PI) * gauss_s * gauss_s;
         factor = expf(-pi2sigma2 * (j * j / (2.f * ch * ch) + k * k / (2.f * cw * cw)));
       } else if (tukey) {
-        if (j > ch * tukey_a) factor *= .5f * (1 + cosf(M_2_PI * (j / ch - .5f)));
-        if (k > cw * tukey_a) factor *= .5f * (1 + cosf(M_2_PI * (k / cw - .5f)));
+        if (conservative) {
+          if (j > ch * tukey_a || k > cw * tukey_a) continue;
+        } else {
+          if (j > ch * tukey_a) factor *= .5f * (1 + cosf(M_2_PI * (j / ch - .5f)));
+          if (k > cw * tukey_a) factor *= .5f * (1 + cosf(M_2_PI * (k / cw - .5f)));
+        }
       }
       for (int l = 0; l < fc; ++l) {
         fine[fw * fc * j + fc * k + l] *= 1.f - factor;
