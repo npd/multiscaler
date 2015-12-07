@@ -36,8 +36,8 @@ int main(int argc, char *argv[]) {
         const float pi2sigma2 = (float) (M_PI * M_PI) * gauss_s * gauss_s;
         factor = expf(-pi2sigma2 * (j * j / (2.f * w * w) + k * k / (2.f * h * h)));
       } else if (tukey) {
-        if (j > h * tukey_a) factor *= .5f * (1 + cosf(M_2_PI * (j / h - .5f)));
-        if (k > w * tukey_a) factor *= .5f * (1 + cosf(M_2_PI * (k / w - .5f)));
+        if (j > h * tukey_a) factor *= .5f * (1 + cosf(M_PI * (j / h - tukey_a) / (1 - tukey_a)));
+        if (k > w * tukey_a) factor *= .5f * (1 + cosf(M_PI * (k / w - tukey_a) / (1 - tukey_a)));
       }
       filter[N * j + k] = factor * factor / (4 * w * h);
     }

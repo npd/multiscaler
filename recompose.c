@@ -52,8 +52,8 @@ int main(int argc, char *argv[]) {
           if (conservative) {
             if (j > h * tukey_a || k > w * tukey_a) continue;
           } else {
-            if (j > h * tukey_a) factor *= .5f * (1 + cosf(M_2_PI * (j / h - .5f)));
-            if (k > w * tukey_a) factor *= .5f * (1 + cosf(M_2_PI * (k / w - .5f)));
+            if (j > h * tukey_a) factor *= .5f * (1 + cosf(M_PI * (j / h - tukey_a) / (1 - tukey_a)));
+            if (k > w * tukey_a) factor *= .5f * (1 + cosf(M_PI * (k / w - tukey_a) / (1 - tukey_a)));
           }
         }
         for (int l = 0; l < c; ++l) {
