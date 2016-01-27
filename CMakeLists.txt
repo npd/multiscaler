@@ -26,11 +26,11 @@ else ()
 endif ()
 
 # Enable C++11
-# if (CMAKE_VERSION VERSION_LESS "3.1")
-#   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-# else ()
-#   set (CMAKE_CXX_STANDARD 11)
-# endif ()
+if (CMAKE_VERSION VERSION_LESS "3.1")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+else ()
+  set (CMAKE_CXX_STANDARD 11)
+endif ()
 
 find_package (TIFF REQUIRED)
 find_package (JPEG REQUIRED)
@@ -42,7 +42,7 @@ link_libraries (${TIFF_LIBRARIES} ${JPEG_LIBRARIES} ${PNG_LIBRARIES} ${FFTWF_LIB
 
 set_property(SOURCE iio.c PROPERTY COMPILE_FLAGS "-Wno-unused-variable -Wno-unused-parameter -Wno-pointer-sign -Wno-parentheses -Wno-deprecated-declarations -Wno-unused-function")
 
-add_executable(decompose decompose.c iio.c iio.h multiscaler.c multiscaler.h)
-add_executable(recompose recompose.c iio.c iio.h multiscaler.c multiscaler.h)
-add_executable(merge_coarse merge_coarse.c iio.c iio.h multiscaler.c multiscaler.h)
-add_executable(gen_cov_mat gen_cov_mat.c iio.c iio.h multiscaler.c multiscaler.h)
+add_library(multiscaler OBJECT iio.c iio.h multiscaler.cpp multiscaler.hpp Image.hpp)
+add_executable(decompose decompose.cpp $<TARGET_OBJECTS:multiscaler>)
+add_executable(recompose recompose.cpp $<TARGET_OBJECTS:multiscaler>)
+add_executable(merge_coarse merge_coarse.cpp $<TARGET_OBJECTS:multiscaler>)

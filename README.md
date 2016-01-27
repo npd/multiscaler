@@ -36,5 +36,4 @@ To join two layers `fine.tiff` and `coarse.tiff` together, use
 
     $ merge_coarse fine.tiff coarse.tiff output.tiff
 
-Use the flag `-g sigma` (in both decomposing and recomposing) to use a Gaussian pyramid with standard deviation `sigma`.
-Use the flag `-t alpha` to use a Tukey window, and `-c` to enforce conservative recomposing.
+Use the flag `-c alpha` to select the ratio for conservative recomposing.

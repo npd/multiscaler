@@ -5,7 +5,9 @@
 #ifndef MULTISCALER_MULTISCALER_H
 #define MULTISCALER_MULTISCALER_H
 
-#include <stdlib.h>
+#include <cstdlib>
+#include <string>
+#include "Image.hpp"
 
 #define SMART_PARAMETER_INT(n, v) static int n(void)\
 {\
@@ -13,7 +15,7 @@
   static int smapa_value_ ## n = v;\
   if (!smapa_known_ ## n) {\
     int r;\
-    char *sv = getenv(#n);\
+    char *sv = std::getenv(#n);\
     int y;\
     if (sv)\
       r = sscanf(sv, "%d", &y);\
@@ -24,9 +26,14 @@
   return smapa_value_ ## n;\
 }
 
-void dct_inplace(float *data, int w, int h, int c);
-void idct_inplace(float *data, int w, int h, int c);
-void dct1_inplace(float *data, int w, int h, int c);
+namespace multiscaler {
+
+void dct_inplace(Image &img);
+void idct_inplace(Image &img);
 const char *pick_option(int *c, char **v, const char *o, const char *d);
+Image read_image(const std::string& filename);
+void save_image(const Image& image, const std::string& filename);
+
+}
 
 #endif //MULTISCALER_MULTISCALER_H
