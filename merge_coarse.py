@@ -29,8 +29,13 @@ def pick_option(argv, option, default):
 def recompose(image, coarse, wtype):
 
    print image.shape
+   
+   # nothing to be done: case in which coarse is the size of image
+   if coarse.shape == image.shape:
+      return coarse
+
    coeffs2 = pywt.dwt2(image,wtype,axes=(0,1))
-   if coeffs2[0].shape[0] == coarse.shape[0]:
+   if coeffs2[0].shape == coarse.shape:
       ncoarse = coarse*2.0
    elif coeffs2[0].shape[0] > coarse.shape[0] and coeffs2[0].shape[1] > coarse.shape[1]:
       ncoarse = recompose(coeffs2[0],coarse*2.0,wtype)
