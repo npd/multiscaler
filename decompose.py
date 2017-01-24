@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# Copyright 2016, Gabriele Facciolo <facciolo@cmla.ens-cachan.fr>
 
 import os
 import sys
