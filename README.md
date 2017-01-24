@@ -43,5 +43,6 @@ Extras
 
 The files decompose.py, recompose.py, and merge_coarse.py implement the above functions using the wavelets provided by the pywt package.
 These python programs use the piio.py package (included) for reading and writing images in the tiff format.
+
     $ ./decompose.py input.png pyramid 3 .tiff
     $ ./recompose.py pyramid 3 .tiff output.tiff
