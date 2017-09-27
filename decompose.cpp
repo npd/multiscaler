@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <cmath>
 #include "multiscaler.hpp"
 
 using namespace multiscaler;
@@ -30,10 +31,13 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < levels; ++i) {
     // Copy data
     Image output(h, w, image.channels());
+    ////> isometric normalization DCT scaling (not active in dct_inplace)
+    //double scaling = std::sqrt((double)(w*h)/((double)(image.rows()*image.columns())));
+    double scaling = 1.0;
     for (int j = 0; j < h; ++j) {
       for (int k = 0; k < w; ++k) {
         for (int l = 0; l < image.channels(); ++l) {
-          output.val(k, j, l) = image.val(k, j, l);
+          output.val(k, j, l) = image.val(k, j, l) * scaling;
         }
       }
     }
