@@ -31,9 +31,12 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < levels; ++i) {
     // Copy data
     Image output(h, w, image.channels());
-    ////> isometric normalization DCT scaling (not active in dct_inplace)
-    //double scaling = std::sqrt((double)(w*h)/((double)(image.rows()*image.columns())));
-    double scaling = 1.0;
+#ifdef ISOMETRIC_DCT
+    //> isometric normalization DCT scaling (not active in dct_inplace)
+    const double scaling = std::sqrt((double)(w*h)/((double)(image.rows()*image.columns())));
+#else
+    const double scaling = 1.0;
+#endif
     for (int j = 0; j < h; ++j) {
       for (int k = 0; k < w; ++k) {
         for (int l = 0; l < image.channels(); ++l) {

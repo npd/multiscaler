@@ -28,6 +28,11 @@
 
 namespace multiscaler {
 
+// by default don't use isometric DCT for multiscale dct_inplace, 
+// idct_inplace, decompose, and  recompose, because it does 
+// unneeded extra computations
+//#define ISOMETRIC_DCT
+
 void dct_inplace(Image &img);
 void idct_inplace(Image &img);
 const char *pick_option(int *c, char **v, const char *o, const char *d);

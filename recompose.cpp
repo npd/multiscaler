@@ -33,9 +33,12 @@ int main(int argc, char *argv[]) {
     // Perform the DCT
     dct_inplace(image);
 
-    ////> isometric normalization DCT scaling (not active in dct_inplace)
-    //double scaling = std::sqrt((double)(output.rows()*output.columns())/((double)(image.rows()*image.columns())));
-    double scaling = 1.0;
+#ifdef ISOMETRIC_DCT
+    //> isometric normalization DCT scaling (not active in dct_inplace)
+    const double scaling = std::sqrt((double)(output.rows()*output.columns())/((double)(image.rows()*image.columns())));
+#else
+    const double scaling = 1.0;
+#endif
     // Copy data (selected by recompose_factor)
     for (int j = 0; j < image.rows() * recompose_factor; ++j) {
       for (int k = 0; k < image.columns() * recompose_factor; ++k) {

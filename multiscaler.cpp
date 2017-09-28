@@ -16,6 +16,7 @@ using std::string;
 
 namespace multiscaler {
 
+
 void dct_inplace(Image &img) {
   int n[] = {img.rows(), img.columns()};
   fftwf_r2r_kind dct2[] = {FFTW_REDFT10, FFTW_REDFT10};
@@ -35,42 +36,47 @@ void dct_inplace(Image &img) {
   fftwf_execute(plan);
   fftwf_destroy_plan(plan);
 
-  //////> isometric normalization
-  //// this normalization (and scaling) affects several other functions: 
-  ////     idct_inplace, decompose, recompose
-  //// but they can all be removed only by applying the Normalization below 
-  //double norm_factor = sqrt(.25f / (img.rows() * img.columns()));
-  //for (int ch = 0; ch < img.channels(); ++ch) {
-  //  for (int row = 0; row < img.rows(); ++row) {
-  //    img.val(0, row, ch) /= sqrt(2.f);
-  //    for (int col = 0; col < img.columns(); ++col) {
-  //      img.val(col, row, ch) *= norm_factor;
-  //    }
-  //  }
-  //  for (int col = 0; col < img.columns(); ++col) {
-  //    img.val(col, 0, ch) /= sqrt(2.f);
-  //  }
-  //}
+#ifdef ISOMETRIC_DCT
+  ////> isometric normalization
+  // this normalization (and scaling) affects several other functions: 
+  //     idct_inplace, decompose, recompose
+  // but they can all be removed only by applying the Normalization below 
+  double norm_factor = sqrt(.25f / (img.rows() * img.columns()));
+  for (int ch = 0; ch < img.channels(); ++ch) {
+    for (int row = 0; row < img.rows(); ++row) {
+      img.val(0, row, ch) /= sqrt(2.f);
+      for (int col = 0; col < img.columns(); ++col) {
+        img.val(col, row, ch) *= norm_factor;
+      }
+    }
+    for (int col = 0; col < img.columns(); ++col) {
+      img.val(col, 0, ch) /= sqrt(2.f);
+    }
+  }
+#else
   //> Normalization
   for (int i = 0; i < img.rows() * img.columns() * img.channels(); ++i) {
       img.val(i) /= 4 * img.rows() * img.columns();
   }
+#endif
 }
 
 void idct_inplace(Image &img) {
-  //////> isometric normalization
-  //long double norm_factor = sqrt(.25f / (img.rows() * img.columns()));
-  //for (int ch = 0; ch < img.channels(); ++ch) {
-  //  for (int row = 0; row < img.rows(); ++row) {
-  //    img.val(0, row, ch) *= sqrt(2.f);
-  //    for (int col = 0; col < img.columns(); ++col) {
-  //      img.val(col, row, ch) *= norm_factor;
-  //    }
-  //  }
-  //  for (int col = 0; col < img.columns(); ++col) {
-  //    img.val(col, 0, ch) *= sqrt(2.f);
-  //  }
-  //}
+#ifdef ISOMETRIC_DCT
+  ////> isometric normalization
+  long double norm_factor = sqrt(.25f / (img.rows() * img.columns()));
+  for (int ch = 0; ch < img.channels(); ++ch) {
+    for (int row = 0; row < img.rows(); ++row) {
+      img.val(0, row, ch) *= sqrt(2.f);
+      for (int col = 0; col < img.columns(); ++col) {
+        img.val(col, row, ch) *= norm_factor;
+      }
+    }
+    for (int col = 0; col < img.columns(); ++col) {
+      img.val(col, 0, ch) *= sqrt(2.f);
+    }
+  }
+#endif
 
   int n[] = {img.rows(), img.columns()};
   fftwf_r2r_kind idct2[] = {FFTW_REDFT01, FFTW_REDFT01};
